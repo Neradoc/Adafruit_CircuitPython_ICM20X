@@ -175,6 +175,7 @@ class ICM20X:  # pylint:disable=too-many-instance-attributes
     # this value is a 12-bit register spread across two bytes, big-endian first
     _accel_rate_divisor = UnaryStruct(_ICM20X_ACCEL_SMPLRT_DIV_1, ">H")
     _gyro_rate_divisor = UnaryStruct(_ICM20X_GYRO_SMPLRT_DIV, ">B")
+
     AccelDLPFFreq.add_values(
         (
             (
@@ -210,6 +211,28 @@ class ICM20X:  # pylint:disable=too-many-instance-attributes
             ("FREQ_361_4HZ_3DB", 7, 361.4, None),
         )
     )
+
+    AccelRange.add_values(
+        (
+            ("RANGE_2G", 0, 2, 16384),
+            ("RANGE_4G", 1, 4, 8192),
+            ("RANGE_8G", 2, 8, 4096),
+            ("RANGE_16G", 3, 16, 2048),
+            ("RANGE_30G", 4, 30, 1024),
+        )
+    )
+    GyroRange.add_values(
+        (
+            ("RANGE_250_DPS", 0, 250, 131.0),
+            ("RANGE_500_DPS", 1, 500, 65.5),
+            ("RANGE_1000_DPS", 2, 1000, 32.8),
+            ("RANGE_2000_DPS", 3, 2000, 16.4),
+            ("RANGE_4000_DPS", 4, 4000, 8.2),
+        )
+    )
+
+    _accel_ranges = ()
+    _gyro_ranges = ()
 
     @property
     def _bank(self):
@@ -304,8 +327,8 @@ class ICM20X:  # pylint:disable=too-many-instance-attributes
 
     @accelerometer_range.setter
     def accelerometer_range(self, value):  # pylint: disable=no-member
-        if not AccelRange.is_valid(value):
-            raise AttributeError("range must be an `AccelRange`")
+        if value not in self._accel_ranges:
+            raise AttributeError("range must be a valid `AccelRange` for this device")
         self._bank = 2
         sleep(0.005)
         self._accel_range = value
@@ -321,9 +344,8 @@ class ICM20X:  # pylint:disable=too-many-instance-attributes
 
     @gyro_range.setter
     def gyro_range(self, value):
-        if not GyroRange.is_valid(value):
-            raise AttributeError("range must be a `GyroRange`")
-
+        if value not in self._gyro_ranges:
+            raise AttributeError("range must be a valid `GyroRange` for this device")
         self._bank = 2
         sleep(0.005)
         self._gyro_range = value
@@ -547,25 +569,22 @@ class ICM20649(ICM20X):
 
     """
 
+    # pylint: disable=no-member
+    _accel_ranges = (
+        AccelRange.RANGE_4G,
+        AccelRange.RANGE_8G,
+        AccelRange.RANGE_16G,
+        AccelRange.RANGE_30G,
+    )
+    _gyro_ranges = (
+        GyroRange.RANGE_500_DPS,
+        GyroRange.RANGE_1000_DPS,
+        GyroRange.RANGE_2000_DPS,
+        GyroRange.RANGE_4000_DPS,
+    )
+    # pylint: enable=no-member
+
     def __init__(self, i2c_bus, address=_ICM20649_DEFAULT_ADDRESS):
-
-        AccelRange.add_values(
-            (
-                ("RANGE_4G", 0, 4, 8192),
-                ("RANGE_8G", 1, 8, 4096.0),
-                ("RANGE_16G", 2, 16, 2048),
-                ("RANGE_30G", 3, 30, 1024),
-            )
-        )
-
-        GyroRange.add_values(
-            (
-                ("RANGE_500_DPS", 0, 500, 65.5),
-                ("RANGE_1000_DPS", 1, 1000, 32.8),
-                ("RANGE_2000_DPS", 2, 2000, 16.4),
-                ("RANGE_4000_DPS", 3, 4000, 8.2),
-            )
-        )
         super().__init__(i2c_bus, address)
 
 
@@ -588,6 +607,19 @@ class MagDataRate(CV):
     """Options for :attr:`ICM20948.magnetometer_data_rate`"""
 
     pass  # pylint: disable=unnecessary-pass
+
+
+# https://www.y-ic.es/datasheet/78/SMDSW.020-2OZ.pdf page 9
+MagDataRate.add_values(
+    (
+        ("SHUTDOWN", 0x0, "Shutdown", None),
+        ("SINGLE", 0x1, "Single", None),
+        ("RATE_10HZ", 0x2, 10, None),
+        ("RATE_20HZ", 0x4, 20, None),
+        ("RATE_50HZ", 0x6, 50, None),
+        ("RATE_100HZ", 0x8, 100, None),
+    )
+)
 
 
 class ICM20948(ICM20X):  # pylint:disable=too-many-instance-attributes
@@ -647,35 +679,22 @@ class ICM20948(ICM20X):  # pylint:disable=too-many-instance-attributes
     _slave4_do = UnaryStruct(_ICM20X_I2C_SLV4_DO, ">B")
     _slave4_di = UnaryStruct(_ICM20X_I2C_SLV4_DI, ">B")
 
-    def __init__(self, i2c_bus, address=_ICM20948_DEFAULT_ADDRESS):
-        AccelRange.add_values(
-            (
-                ("RANGE_2G", 0, 2, 16384),
-                ("RANGE_4G", 1, 4, 8192),
-                ("RANGE_8G", 2, 8, 4096.0),
-                ("RANGE_16G", 3, 16, 2048),
-            )
-        )
-        GyroRange.add_values(
-            (
-                ("RANGE_250_DPS", 0, 250, 131.0),
-                ("RANGE_500_DPS", 1, 500, 65.5),
-                ("RANGE_1000_DPS", 2, 1000, 32.8),
-                ("RANGE_2000_DPS", 3, 2000, 16.4),
-            )
-        )
+    # pylint: disable=no-member
+    _accel_ranges = (
+        AccelRange.RANGE_2G,
+        AccelRange.RANGE_4G,
+        AccelRange.RANGE_8G,
+        AccelRange.RANGE_16G,
+    )
+    _gyro_ranges = (
+        GyroRange.RANGE_250_DPS,
+        GyroRange.RANGE_500_DPS,
+        GyroRange.RANGE_1000_DPS,
+        GyroRange.RANGE_2000_DPS,
+    )
+    # pylint: enable=no-member
 
-        # https://www.y-ic.es/datasheet/78/SMDSW.020-2OZ.pdf page 9
-        MagDataRate.add_values(
-            (
-                ("SHUTDOWN", 0x0, "Shutdown", None),
-                ("SINGLE", 0x1, "Single", None),
-                ("RATE_10HZ", 0x2, 10, None),
-                ("RATE_20HZ", 0x4, 20, None),
-                ("RATE_50HZ", 0x6, 50, None),
-                ("RATE_100HZ", 0x8, 100, None),
-            )
-        )
+    def __init__(self, i2c_bus, address=_ICM20948_DEFAULT_ADDRESS):
         super().__init__(i2c_bus, address)
         self._magnetometer_init()
 
@@ -770,7 +789,7 @@ class ICM20948(ICM20X):  # pylint:disable=too-many-instance-attributes
         # transit to other modes. After Power-down mode is set, at least 100 microsectons (Twait)
         # is needed before setting another mode"
         if not MagDataRate.is_valid(mag_rate):
-            raise AttributeError("range must be an `MagDataRate`")
+            raise AttributeError("range must be a `MagDataRate`")
         self._write_mag_register(
             _AK09916_CNTL2, MagDataRate.SHUTDOWN  # pylint: disable=no-member
         )
