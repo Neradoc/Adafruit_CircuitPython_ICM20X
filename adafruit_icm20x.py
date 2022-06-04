@@ -328,7 +328,7 @@ class ICM20X:  # pylint:disable=too-many-instance-attributes
     @accelerometer_range.setter
     def accelerometer_range(self, value):  # pylint: disable=no-member
         if value not in self._accel_ranges:
-            raise AttributeError("range must be a valid `AccelRange` for this device")
+            raise AttributeError("range must be a valid AccelRange for this device")
         self._bank = 2
         sleep(0.005)
         self._accel_range = value
@@ -345,7 +345,7 @@ class ICM20X:  # pylint:disable=too-many-instance-attributes
     @gyro_range.setter
     def gyro_range(self, value):
         if value not in self._gyro_ranges:
-            raise AttributeError("range must be a valid `GyroRange` for this device")
+            raise AttributeError("range must be a valid GyroRange for this device")
         self._bank = 2
         sleep(0.005)
         self._gyro_range = value
@@ -490,7 +490,7 @@ class ICM20X:  # pylint:disable=too-many-instance-attributes
     @accel_dlpf_cutoff.setter
     def accel_dlpf_cutoff(self, cutoff_frequency):
         if not AccelDLPFFreq.is_valid(cutoff_frequency):
-            raise AttributeError("accel_dlpf_cutoff must be an `AccelDLPFFreq`")
+            raise AttributeError("accel_dlpf_cutoff must be an AccelDLPFFreq")
         self._bank = 2
         # check for shutdown
         if cutoff_frequency is AccelDLPFFreq.DISABLED:  # pylint: disable=no-member
@@ -516,7 +516,7 @@ class ICM20X:  # pylint:disable=too-many-instance-attributes
     @gyro_dlpf_cutoff.setter
     def gyro_dlpf_cutoff(self, cutoff_frequency):
         if not GyroDLPFFreq.is_valid(cutoff_frequency):
-            raise AttributeError("gyro_dlpf_cutoff must be a `GyroDLPFFreq`")
+            raise AttributeError("gyro_dlpf_cutoff must be a GyroDLPFFreq")
         self._bank = 2
         # check for shutdown
         if cutoff_frequency is GyroDLPFFreq.DISABLED:  # pylint: disable=no-member
@@ -789,7 +789,7 @@ class ICM20948(ICM20X):  # pylint:disable=too-many-instance-attributes
         # transit to other modes. After Power-down mode is set, at least 100 microsectons (Twait)
         # is needed before setting another mode"
         if not MagDataRate.is_valid(mag_rate):
-            raise AttributeError("range must be a `MagDataRate`")
+            raise AttributeError("range must be a MagDataRate")
         self._write_mag_register(
             _AK09916_CNTL2, MagDataRate.SHUTDOWN  # pylint: disable=no-member
         )
